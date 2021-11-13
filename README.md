@@ -1,6 +1,6 @@
 # Subscan 
 
-Subscan is forked from Subscan Essentials supported by web3 foundation, which provided substrate-based blockchain explorer include observer and HTTP API server
+Subscan is forked from Subscan Essentials release v0.1.0, which supported by web3 foundation, which provided substrate-based blockchain explorer include observer and HTTP API server
 
 ## Contents
 
