@@ -1,10 +1,10 @@
 package service
 
 import (
+	"github.com/CoolBitX-Technology/subscan/plugins/system/dao"
+	"github.com/CoolBitX-Technology/subscan/plugins/system/model"
+	"github.com/CoolBitX-Technology/subscan/util"
 	"github.com/itering/subscan-plugin/storage"
-	"github.com/itering/subscan/plugins/system/dao"
-	"github.com/itering/subscan/plugins/system/model"
-	"github.com/itering/subscan/util"
 )
 
 type Service struct {
@@ -36,11 +36,13 @@ func (s *Service) ExtrinsicFailed(spec int, event *storage.Event, paramEvent []s
 			util.UnmarshalAny(&dr, param.Value)
 
 			if _, ok := dr["Error"]; ok {
+				// log.Info("== case 1 ==")
 				_ = dao.CreateExtrinsicError(s.dao,
 					event.ExtrinsicHash,
 					dao.CheckExtrinsicError(spec, s.dao.SpecialMetadata(spec), util.IntFromInterface(dr["Module"]), util.IntFromInterface(dr["Error"])))
 
 			} else if _, ok := dr["Module"]; ok {
+				// log.Info("== case 2 ==")
 				var module DispatchErrorModule
 				util.UnmarshalAny(&module, dr["Module"])
 
@@ -49,17 +51,19 @@ func (s *Service) ExtrinsicFailed(spec int, event *storage.Event, paramEvent []s
 					dao.CheckExtrinsicError(spec, s.dao.SpecialMetadata(spec), module.Index, module.Error))
 
 			} else if _, ok := dr["BadOrigin"]; ok {
+				// log.Info("== case 3 ==")
 				_ = dao.CreateExtrinsicError(s.dao, event.ExtrinsicHash,
 					&model.MetadataModuleError{Name: "BadOrigin"})
 
 			} else if _, ok := dr["CannotLookup"]; ok {
+				// log.Info("== case 4 ==")
 				_ = dao.CreateExtrinsicError(s.dao, event.ExtrinsicHash,
 					&model.MetadataModuleError{Name: "CannotLookup"})
 
 			} else if _, ok := dr["Other"]; ok {
+				// log.Info("== case 5 ==")
 				_ = dao.CreateExtrinsicError(s.dao, event.ExtrinsicHash,
 					&model.MetadataModuleError{Name: "Other"})
-
 			}
 			break
 		}

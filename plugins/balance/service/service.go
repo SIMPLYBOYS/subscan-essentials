@@ -1,9 +1,9 @@
 package service
 
 import (
+	"github.com/CoolBitX-Technology/subscan/plugins/balance/dao"
+	"github.com/CoolBitX-Technology/subscan/plugins/balance/model"
 	"github.com/itering/subscan-plugin/storage"
-	"github.com/itering/subscan/plugins/balance/dao"
-	"github.com/itering/subscan/plugins/balance/model"
 )
 
 type Service struct {

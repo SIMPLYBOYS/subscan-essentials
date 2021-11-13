@@ -1,15 +1,6 @@
-![grants_badge](./grants_badge.png)
+# Subscan 
 
-# Subscan Essentials
-
-![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/itering/subscan)](https://goreportcard.com/report/github.com/itering/subscan)
-![subscan](https://github.com/itering/subscan/workflows/subscan/badge.svg)
-
-Subscan Essentials is a high-precision blockchain explorer scaffold project. 
-It supports substrate-based blockchain networks with developer-friendly interface, standard or custom module parsing capabilities. 
-It's developed by the Subscan team and used in subscan.io. 
-Developers are free to use the codebase to extend functionalities and develop unique user experiences for their audiences.
+Subscan is forked from Subscan Essentials supported by web3 foundation, which provided substrate-based blockchain explorer include observer and HTTP API server
 
 ## Contents
 
@@ -18,13 +9,10 @@ Developers are free to use the codebase to extend functionalities and develop un
   - [Requirement](#Requirement)
   - [Structure](docs/tree.md)
   - [Installation](#Install)
-  - [UI](#UI)
   - [Config](#Config)
   - [Usage](#Usage)
   - [Docker](#Docker)
   - [Test](#Test)
-- [Contributions](#Contributions)
-- [LICENSE](#LICENSE)
 - [Resource](#Resource)
 
 ## Feature
@@ -51,49 +39,6 @@ Developers are free to use the codebase to extend functionalities and develop un
 
 ```bash
 ./build.sh build
-
-//UI
-cd ui && yarn && yarn dev
-```
-
-### UI
-
-The ui part is built with [nuxt.js](https://nuxtjs.org/) and [amis](https://github.com/baidu/amis)
-
-Demo: [blocks](/ui/plugins/blocks.js), refer to [amis docs](https://baidu.gitee.io/amis/docs/index) for further detail.
-
-[Online Demo](https://crab.demo.subscan.io/)
-
-Please change proxy target in nuxt.config.js to your server name in development.
-
-```js
-proxy: {
-   "/api": {
-      target: "https://your_server_name.com",
-      secure: false,
-      changeOrigin: true,
-      pathRewrite: {
-         "^/api": "/api"
-      }
-   },
-}
-```
-
-Please change browserBaseURL in nuxt.config.js to your server name in production.
-
-```js
-axios: {
-   proxy: process.env.NODE_ENV !== 'production',
-    browserBaseURL: process.env.NODE_ENV !== 'production' ? "" : "https://your_server_name.com"
-},
-```
-
-#### Example
-
-![ui_demo](./ui_demo.png)
-
-First choose a search type, and enter search content.
-Then click search button, result will be shown in the output section.
 
 #### Feature Supported
 
@@ -135,10 +80,22 @@ cp configs/redis.toml.example configs/redis.toml && cp configs/mysql.toml.exampl
 
 **Make sure you have started redis and mysql**
 
-- Substrate Daemon
+- Substrate Daemon (example in substrate)
 ```bash
 cd cmd
 ./subscan start substrate
+```
+
+- Substrate Plugins 
+```bash
+cd cmd
+./subscan start plugins
+```
+
+- Substrate Repair  
+```bash
+cd cmd
+./subscan start repair
 ```
 
 - Api Server
@@ -169,7 +126,7 @@ COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --conf value   (default: "../configs")
+   --conf value   (default: "./configs")
    --help, -h     show help
    --version, -v  print the version
 
@@ -205,21 +162,16 @@ docker-compose up -d
 **default test mysql database is subscan_test. Please CREATE it or change configs/mysql.toml**
 
 ```bash
-go test ./...
-
-//UI
-cd ui && yarn && yarn test
+go test -v ./...
 ```
+### deprecated Collecting Logs
 
-
-## Contributions
-
-We welcome contributions of any kind. Issues labeled can be good (first) contributions.
-
-## LICENSE
-
-GPL-3.0
-
+When launch subscan with observer daemon, it would generate a log folder named log from rootPath include a substrate_log contains logging info 
+```
+./log/substrate_log
+```
+### Logs
+Each observer daemon would generate log to stdout, so can collect log in normal way
 
 ## Resource
  

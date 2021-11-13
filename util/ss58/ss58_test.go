@@ -1,9 +1,10 @@
 package ss58_test
 
 import (
-	"github.com/itering/subscan/util/ss58"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/CoolBitX-Technology/subscan/util/ss58"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDecode(t *testing.T) {

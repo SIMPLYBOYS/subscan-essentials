@@ -6,7 +6,7 @@ app=${BASENAME}
 
 function build() {
     go build -o ./cmd/subscan -v ./cmd
-	echo "Build Success"
+	# echo "Build Success"
 }
 
 function install() {

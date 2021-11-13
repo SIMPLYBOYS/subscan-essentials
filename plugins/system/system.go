@@ -1,12 +1,13 @@
 package system
 
 import (
+	"github.com/CoolBitX-Technology/subscan/plugins/system/model"
+	"github.com/CoolBitX-Technology/subscan/plugins/system/service"
+	"github.com/CoolBitX-Technology/subscan/util"
 	ui "github.com/itering/subscan-plugin"
 	"github.com/itering/subscan-plugin/router"
 	"github.com/itering/subscan-plugin/storage"
-	"github.com/itering/subscan/plugins/system/model"
-	"github.com/itering/subscan/plugins/system/service"
-	"github.com/itering/subscan/util"
+	"github.com/prometheus/common/log"
 	"github.com/shopspring/decimal"
 )
 
@@ -37,6 +38,8 @@ func (a *System) ProcessExtrinsic(*storage.Block, *storage.Extrinsic, []storage.
 func (a *System) ProcessEvent(block *storage.Block, event *storage.Event, _ decimal.Decimal) error {
 	var paramEvent []storage.EventParam
 	util.UnmarshalAny(&paramEvent, event.Params)
+	log.Info("system.ProcessEvent: ", block.BlockNum)
+	log.Info("EventId: ", event.EventId, "ModuleId", event.ModuleId)
 	switch event.EventId {
 	case "ExtrinsicFailed":
 		srv.ExtrinsicFailed(block.SpecVersion, event, paramEvent)

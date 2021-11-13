@@ -1,8 +1,8 @@
 package ss58
 
 import (
-	"github.com/itering/subscan/util"
-	"github.com/itering/subscan/util/base58"
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/CoolBitX-Technology/subscan/util/base58"
 	"golang.org/x/crypto/blake2b"
 )
 

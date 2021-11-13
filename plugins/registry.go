@@ -1,24 +1,31 @@
 package plugins
 
 import (
-	"github.com/itering/subscan-plugin"
-	"github.com/itering/subscan/plugins/balance"
-	"github.com/itering/subscan/plugins/system"
 	"reflect"
 	"strings"
+
+	"github.com/CoolBitX-Technology/subscan/model"
+	"github.com/CoolBitX-Technology/subscan/plugins/bond"
+	"github.com/CoolBitX-Technology/subscan/plugins/reward"
+	"github.com/CoolBitX-Technology/subscan/plugins/transfers"
+	"github.com/prometheus/common/log"
 )
 
-type PluginFactory subscan_plugin.Plugin
+type PluginFactory model.Plugin
 
 var RegisteredPlugins = make(map[string]PluginFactory)
 
 // register local plugin
 func init() {
-	registerNative(balance.New())
-	registerNative(system.New())
+	// registerNative(balance.New())
+	// registerNative(system.New())
+	registerNative(transfers.New())
+	registerNative(bond.New())
+	registerNative(reward.New())
 }
 
 func register(name string, f interface{}) {
+	log.Info("register plugins: ", name)
 	name = strings.ToLower(name)
 	if f == nil {
 		return
@@ -46,7 +53,7 @@ type PluginInfo struct {
 func List() []PluginInfo {
 	plugins := make([]PluginInfo, 0, len(RegisteredPlugins))
 	for name, plugin := range RegisteredPlugins {
-		plugins = append(plugins, PluginInfo{Name: name, Version: plugin.Version(), Ui: plugin.UiConf() != nil})
+		plugins = append(plugins, PluginInfo{Name: name, Version: plugin.Version()})
 	}
 	return plugins
 }

@@ -1,44 +1,78 @@
-version: "2.4"
+version: "3.9"
 
 services:
   subscan-api:
     build: .
-    image: subscan/api
-    environment: &app_base
+    image: subscan/api:test
+    environment:
       MYSQL_HOST: mysql
-      MYSQL_PASS: 'helloload'
-      # Name of the database subscan will connect to and use
-      # this db must exist
-      MYSQL_DB: 'subscan'
+      MYSQL_PASS: helloload
+      MYSQL_DB: subscan
       REDIS_ADDR: redis:6379
-      CHAIN_WS_ENDPOINT: 'wss://rpc.polkadot.io'
-      # the types file used for the chain as:
-      # configs/source/{NETWORK_NODE}.json
-      NETWORK_NODE: 'polkadot'
-      WEB_HOST: 'http://subscan-api:4399'
-      DEPLOY_ENV: 'prod'
+      CHAIN_WS_ENDPOINT: ws://host.docker.internal:9944
+      NETWORK_NODE: polkadot
+      WEB_HOST: http://subscan-api:4399
+      DEPLOY_ENV: test
+    # volumes:
+    #   - ./tmp/subscan/configs:/app/configs:ro
     ports:
-      - '4399:4399'
+      - "4399:4399"
+    depends_on:
+      - mysql
+      - redis
     networks:
-      - app_net
-  subscan-observer:
-    environment:
-      <<: *app_base
-    image: subscan/api
-    command: ["python","run.py","substrate"]
-    networks:
-      - app_net
+      - app
+      - db
 
-  subscan-static:
-    build:
-      context: ./ui
+  subscan-observer:
+    build: .
+    image: subscan/api:test
     environment:
-      NODE_ENV: 'production'
-    ports:
-      - '80:80'
+      MYSQL_HOST: mysql
+      MYSQL_PASS: helloload
+      MYSQL_DB: subscan
+      REDIS_ADDR: redis:6379
+      CHAIN_WS_ENDPOINT: ws://host.docker.internal:9944
+      NETWORK_NODE: polkadot
+      DEPLOY_ENV: test
+    # volumes:
+    #   - ./tmp/subscan/configs:/app/configs:ro
+    depends_on:
+      - mysql
+      - redis
+    command: ["python", "run.py", "substrate"]
     networks:
-      - app_net
+      - db
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: helloload
+      MYSQL_DATABASE: subscan
+    volumes:
+      - ./tmp/mysql/data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ########################################
+    # Run without the default seccomp profile
+    # https://docs.docker.com/engine/security/seccomp/
+    #
+    # fix: mbind: Operation not permitted
+    ########################################
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - db
+
+  redis:
+    image: redis:6.2
+    volumes:
+      - ./tmp/redis/data:/data
+    networks:
+      - db
 
 networks:
-  app_net:
-    external: true
+  app:
+    driver: bridge
+  db:
+    driver: bridge

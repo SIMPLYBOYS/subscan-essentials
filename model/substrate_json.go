@@ -34,19 +34,20 @@ type SampleBlockJson struct {
 }
 
 type ChainExtrinsicJson struct {
-	BlockTimestamp     int             `json:"block_timestamp"`
-	BlockNum           int             `json:"block_num"`
-	ExtrinsicIndex     string          `json:"extrinsic_index"`
-	CallModuleFunction string          `json:"call_module_function"`
-	CallModule         string          `json:"call_module"`
-	Params             string          `json:"params"`
-	AccountId          string          `json:"account_id"`
-	AccountIndex       string          `json:"account_index"`
-	Signature          string          `json:"signature"`
-	Nonce              int             `json:"nonce"`
-	ExtrinsicHash      string          `json:"extrinsic_hash"`
-	Success            bool            `json:"success"`
-	Fee                decimal.Decimal `json:"fee"`
+	BlockTimestamp     int              `json:"block_timestamp"`
+	BlockNum           int              `json:"block_num"`
+	ExtrinsicIndex     string           `json:"extrinsic_index"`
+	CallModuleFunction string           `json:"call_module_function"`
+	CallModule         string           `json:"call_module"`
+	Params             []ExtrinsicParam `json:"params"`
+	From               string           `json:"from"`
+	AccountIndex       string           `json:"account_index"`
+	Signature          string           `json:"signature"`
+	Nonce              int              `json:"nonce"`
+	ExtrinsicHash      string           `json:"extrinsic_hash"`
+	Success            bool             `json:"success"`
+	Finalized          bool             `json:"finalized"`
+	Fee                decimal.Decimal  `json:"fee"`
 }
 
 type ExtrinsicDetail struct {

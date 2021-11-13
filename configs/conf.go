@@ -2,10 +2,10 @@ package configs
 
 import (
 	"fmt"
-	"github.com/go-kratos/kratos/pkg/cache/redis"
+
+	"github.com/CoolBitX-Technology/subscan/util"
 	"github.com/go-kratos/kratos/pkg/conf/paladin"
 	"github.com/go-kratos/kratos/pkg/database/sql"
-	"github.com/itering/subscan/util"
 )
 
 type (
@@ -20,9 +20,21 @@ type (
 		Task *sql.Config
 		Test *sql.Config
 	}
+	HttpConf struct {
+		Server struct {
+			Addr    string
+			Timeout string
+		}
+	}
 	RedisConf struct {
-		Config *redis.Config
-		DbName int
+		Config struct {
+			Addr       string
+			Addrs      string
+			DbName     int
+			MasterName string
+			AuthPw     string
+			Pw         string
+		}
 	}
 )
 
@@ -42,16 +54,30 @@ func (rc *RedisConf) MergeConf() {
 	rc.mergeEnvironment()
 }
 
+func (hc *HttpConf) MergeConf() {
+	checkErr(paladin.Get("http.toml").UnmarshalTOML(hc))
+	hc.mergeEnvironment()
+}
+
 func (dc *MysqlConf) mergeEnvironment() {
 	dbHost := util.GetEnv("MYSQL_HOST", dc.Conf.Host)
 	dbUser := util.GetEnv("MYSQL_USER", dc.Conf.User)
 	dbPass := util.GetEnv("MYSQL_PASS", dc.Conf.Pass)
-	dbName := util.GetEnv("MYSQL_DB", dc.Conf.DB)
+	dbName := fmt.Sprintf("%s", util.GetEnv("MYSQL_DB", "subscan"))
 	dc.Api.DSN = fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPass, dbHost, dbName) + dc.Api.DSN
 	dc.Task.DSN = fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPass, dbHost, dbName) + dc.Task.DSN
 }
 
 func (rc *RedisConf) mergeEnvironment() {
 	rc.Config.Addr = util.GetEnv("REDIS_ADDR", rc.Config.Addr)
-	rc.DbName = util.StringToInt(util.GetEnv("REDIS_DATABASE", "0"))
+	rc.Config.Addrs = util.GetEnv("SENTINEL_ADDRS", rc.Config.Addrs) // host_a:1234,host_b:4321
+	rc.Config.DbName = util.StringToInt(util.GetEnv("REDIS_DATABASE", "0"))
+	rc.Config.MasterName = util.GetEnv("REDIS_MASTER_NAME", rc.Config.MasterName)
+	rc.Config.Pw = util.GetEnv("REDIS_PW", rc.Config.Pw)
+	rc.Config.AuthPw = util.GetEnv("REDIS_AUTH_PW", rc.Config.AuthPw)
+}
+
+func (hc *HttpConf) mergeEnvironment() {
+	hc.Server.Addr = util.GetEnv("HTTP_ADDR", hc.Server.Addr)
+	hc.Server.Timeout = util.GetEnv("HTTP_TIMEOUT", "10s")
 }

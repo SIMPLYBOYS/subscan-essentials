@@ -3,24 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/go-kratos/kratos/pkg/conf/paladin"
-	"github.com/go-kratos/kratos/pkg/log"
-	"github.com/itering/subscan/internal/observer"
-	"github.com/itering/subscan/internal/script"
-	"github.com/itering/subscan/internal/server/http"
-	"github.com/itering/subscan/internal/service"
-	"github.com/itering/substrate-api-rpc/websocket"
-	"github.com/urfave/cli"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 	"time"
+
+	"github.com/CoolBitX-Technology/subscan/configs"
+	"github.com/CoolBitX-Technology/subscan/internal/script"
+	"github.com/CoolBitX-Technology/subscan/internal/server/http/handler"
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/gin-gonic/gin"
+	"github.com/go-kratos/kratos/pkg/conf/paladin"
+	"github.com/itering/substrate-api-rpc/websocket"
+	"github.com/prometheus/common/log"
+	"github.com/urfave/cli"
 )
 
 func main() {
 	defer func() {
-		_ = log.Close()
 		websocket.Close()
 	}()
 	if err := setupApp().Run(os.Args); err != nil {
@@ -30,6 +32,7 @@ func main() {
 }
 
 func setupApp() *cli.App {
+	observer := NewObserver()
 	app := cli.NewApp()
 	app.Name = "SUBSCAN"
 	app.Usage = "SUBSCAN Backend Service, use -h get help"
@@ -37,7 +40,7 @@ func setupApp() *cli.App {
 	app.Action = func(*cli.Context) error { run(); return nil }
 	app.Description = "SubScan Backend Service, substrate blockchain explorer"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{Name: "conf", Value: "../configs"},
+		cli.StringFlag{Name: "conf", Value: "./configs"},
 	}
 	app.Before = func(context *cli.Context) error {
 		if client, err := paladin.NewFile(context.String("conf")); err != nil {
@@ -45,7 +48,6 @@ func setupApp() *cli.App {
 		} else {
 			paladin.DefaultClient = client
 		}
-		log.Init(nil)
 		runtime.GOMAXPROCS(runtime.NumCPU())
 		return nil
 	}
@@ -54,7 +56,7 @@ func setupApp() *cli.App {
 			Name:  "start",
 			Usage: "Start one worker, E.g substrate",
 			Action: func(c *cli.Context) error {
-				observer.Run(c.Args().Get(0), "start")
+				observer.Run(c.Args(), "start")
 				return nil
 			},
 		},
@@ -62,7 +64,7 @@ func setupApp() *cli.App {
 			Name:  "stop",
 			Usage: "Stop one worker, E.g substrate",
 			Action: func(c *cli.Context) error {
-				observer.Run(c.Args().Get(0), "stop")
+				observer.Run(c.Args(), "stop")
 				return nil
 			},
 		},
@@ -79,21 +81,75 @@ func setupApp() *cli.App {
 }
 
 func run() {
-	svc := service.New()
-	engine := http.New(svc)
+	websocket.SetEndpoint(util.WSEndPoint)
+	conn, err := websocket.Init()
+
+	for i := 0; i < retry; i++ {
+		if !conn.Conn.IsConnected() {
+			conn.Conn.Dial(util.WSEndPoint, nil)
+		} else {
+			break
+		}
+		fmt.Fprintf(os.Stderr, "websocket dial error: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "%d times Retrying in %v\n", i+1, 10*time.Second)
+		time.Sleep(10 * time.Second)
+	}
+
+	ds, err := initDS()
+
+	if err != nil {
+		log.Error("Unable to initialize data sources: ", err)
+	}
+
+	err, common, block, extrinsic, event, runtime, plugin, _, _, _, _ := inject(ds)
+
+	if err != nil {
+		log.Error("Failure to inject data sources: ", err)
+	}
+
+	common.InitSubRuntimeLatest()
+	plugin.PluginRegister()
+	// gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+	handler.NewHandler(&handler.Config{
+		R:                router,
+		CommonService:    common,
+		BlockService:     block,
+		ExtrinsicService: extrinsic,
+		EventService:     event,
+		RuntimeService:   runtime,
+	})
+
+	var hc configs.HttpConf
+	hc.MergeConf()
+
+	srv := &http.Server{
+		Addr:    hc.Server.Addr,
+		Handler: router,
+	}
+
 	c := make(chan os.Signal, 1)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Error("Failed to initialize server: ", err)
+		}
+	}()
+
+	log.Info("Listening on port ", srv.Addr)
+
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
-		log.Info("get a signal %s", s.String())
+		log.Info("get a signal ", s.String())
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
 			ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
-			if err := engine.Shutdown(ctx); err != nil {
-				log.Error("httpSrv.Shutdown error(%v)", err)
+			defer cancel()
+			common.Close()
+			if err := srv.Shutdown(ctx); err != nil {
+				log.Error("httpSrv.Shutdown error(", err, ")")
 			}
-			cancel()
-			svc.Close()
 			log.Info("SubScan End exit")
 			time.Sleep(time.Second)
 			return

@@ -14,3 +14,7 @@ func init() {
 	registerNative(YourPlugin.New()) // Register plugin to subscan
 }
 ```
+
+"block_num","block_timestamp","hash","parent_hash","state_root","extrinsics_root","logs","extrinsics","event_count","extrinsics_count","event","spec_version","validator","codec_error","finalized"
+
+LOAD DATA LOCAL INFILE '/tmp/chain_blocks_5_202110110929.csv' INTO TABLE chain_blocks_5 (block_num, block_timestamp, hash, parent_hash, state_root, extrinsics_root, logs, extrinsics, event_count, extrinsics_count, event, spec_version, validator, codec_error, finalized) FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES;

@@ -1,8 +1,8 @@
 package address
 
 import (
-	"github.com/itering/subscan/util"
-	"github.com/itering/subscan/util/ss58"
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/CoolBitX-Technology/subscan/util/ss58"
 )
 
 func SS58Address(address string) string {

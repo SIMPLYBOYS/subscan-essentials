@@ -2,11 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/itering/subscan-plugin/router"
-	"github.com/itering/subscan/plugins/balance/service"
-	"github.com/itering/subscan/util/validator"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/CoolBitX-Technology/subscan/plugins/balance/service"
+	"github.com/CoolBitX-Technology/subscan/util/validator"
+	"github.com/itering/subscan-plugin/router"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -70,7 +71,7 @@ func (j J) WriteContentType(w http.ResponseWriter) {
 
 func toJson(w http.ResponseWriter, code int, data interface{}, err error) {
 	j := J{
-		Message: "success",
+		Message: "Success",
 		TTL:     1,
 		Data:    data,
 	}

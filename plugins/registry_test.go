@@ -1,25 +1,25 @@
 package plugins
 
 import (
-	subscan_plugin "github.com/itering/subscan-plugin"
+	"testing"
+
+	"github.com/CoolBitX-Technology/subscan/model"
 	"github.com/itering/subscan-plugin/router"
-	"github.com/itering/subscan-plugin/storage"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type TPlugin struct{}
 
-func (a *TPlugin) InitDao(d storage.Dao) {}
+func (a *TPlugin) InitDao(d model.Dao) {}
 
 func (a *TPlugin) InitHttp() []router.Http { return nil }
 
-func (a *TPlugin) ProcessExtrinsic(block *storage.Block, extrinsic *storage.Extrinsic, events []storage.Event) error {
+func (a *TPlugin) ProcessExtrinsic(block *model.Block, extrinsic *model.Extrinsic, events []model.Event) error {
 	return nil
 }
 
-func (a *TPlugin) ProcessEvent(block *storage.Block, event *storage.Event, fee decimal.Decimal) error {
+func (a *TPlugin) ProcessEvent(block *model.Block, event *model.Event, fee decimal.Decimal) error {
 	return nil
 }
 
@@ -30,8 +30,6 @@ func (a *TPlugin) Version() string { return "0.1" }
 func (a *TPlugin) SubscribeExtrinsic() []string { return nil }
 
 func (a *TPlugin) SubscribeEvent() []string { return nil }
-
-func (a *TPlugin) UiConf() *subscan_plugin.UiConfig { return nil }
 
 func TestRegister(t *testing.T) {
 	register("test", &TPlugin{})

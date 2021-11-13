@@ -2,13 +2,32 @@ package model
 
 import (
 	"fmt"
-	"github.com/itering/subscan-plugin/storage"
-	"github.com/itering/subscan/util"
+	"sync"
+
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/jinzhu/gorm"
 	"github.com/shopspring/decimal"
 )
 
 // SplitTableBlockNum
 var SplitTableBlockNum = 1000000
+
+const (
+	Ok                   = 100001
+	UnknownError         = 100002
+	AddressValidateError = 100003
+	QueryBindingError    = 100004
+	DataBaseError        = 100101
+)
+
+type GormDB struct {
+	*gorm.DB
+	GdbDone bool
+}
+
+var (
+	DaemonAction = []string{"substrate", "plugins", "repair"}
+)
 
 type ChainBlock struct {
 	ID              uint   `gorm:"primary_key" json:"id"`
@@ -33,11 +52,12 @@ func (c ChainBlock) TableName() string {
 	if c.BlockNum/SplitTableBlockNum == 0 {
 		return "chain_blocks"
 	}
+
 	return fmt.Sprintf("chain_blocks_%d", c.BlockNum/SplitTableBlockNum)
 }
 
-func (c *ChainBlock) AsPlugin() *storage.Block {
-	return &storage.Block{
+func (c *ChainBlock) AsPlugin() *Block {
+	return &Block{
 		BlockNum:       c.BlockNum,
 		BlockTimestamp: c.BlockTimestamp,
 		Hash:           c.Hash,
@@ -67,8 +87,8 @@ func (c ChainEvent) TableName() string {
 	return fmt.Sprintf("chain_events_%d", c.BlockNum/SplitTableBlockNum)
 }
 
-func (c *ChainEvent) AsPlugin() *storage.Event {
-	return &storage.Event{
+func (c *ChainEvent) AsPlugin() *Event {
+	return &Event{
 		BlockNum:      c.BlockNum,
 		ExtrinsicIdx:  c.ExtrinsicIdx,
 		ModuleId:      c.ModuleId,
@@ -108,8 +128,8 @@ func (c ChainExtrinsic) TableName() string {
 	return fmt.Sprintf("chain_extrinsics_%d", c.BlockNum/SplitTableBlockNum)
 }
 
-func (c *ChainExtrinsic) AsPlugin() *storage.Extrinsic {
-	return &storage.Extrinsic{
+func (c *ChainExtrinsic) AsPlugin() *Extrinsic {
+	return &Extrinsic{
 		ExtrinsicIndex:     c.ExtrinsicIndex,
 		CallModule:         c.CallModule,
 		CallModuleFunction: c.CallModuleFunction,
@@ -128,7 +148,7 @@ type RuntimeVersion struct {
 	Id          int    `json:"-"`
 	Name        string `json:"-"`
 	SpecVersion int    `json:"spec_version"`
-	Modules     string `json:"modules"  sql:"type:TEXT;"`
+	Modules     string `json:"modules  sql:"type:TEXT;"`
 	RawData     string `json:"-" sql:"type:MEDIUMTEXT;"`
 }
 
@@ -149,13 +169,64 @@ func (c ChainLog) TableName() string {
 }
 
 type ExtrinsicParam struct {
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	Value    interface{} `json:"value"`
-	ValueRaw string      `json:"valueRaw"`
+	Name  string      `json:"name"`
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
+	// ValueRaw string      `json:"valueRaw"`
 }
 
 type EventParam struct {
 	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
+}
+
+type R struct {
+	Code        int         `json:"code"`
+	Message     string      `json:"message"`
+	GeneratedAt int64       `json:"generated_at"`
+	Data        interface{} `json:"data,omitempty"`
+}
+
+type BlockFinalized struct {
+	BlockNum  int  `json:"block_num"`
+	Finalized bool `json:"finalized"`
+}
+
+type PluginDataSource struct {
+	b *ChainBlock             `json:"b"`
+	e ChainExtrinsic          `json:"e"`
+	c map[string][]ChainEvent `json:"c"`
+}
+
+type IntBoolMap struct {
+	m sync.Map
+}
+
+func (iMap *IntBoolMap) Delete(key int) {
+	iMap.m.Delete(key)
+}
+
+func (iMap *IntBoolMap) Load(key int) (value bool, ok bool) {
+	v, ok := iMap.m.Load(key)
+	if v != nil {
+		value = v.(bool)
+	}
+	return
+}
+
+func (iMap *IntBoolMap) LoadOrStore(key int, value bool) (actual bool, loaded bool) {
+	a, loaded := iMap.m.LoadOrStore(key, value)
+	actual = a.(bool)
+	return
+}
+
+func (iMap *IntBoolMap) Range(f func(key int, value bool) bool) {
+	f1 := func(key, value interface{}) bool {
+		return f(key.(int), value.(bool))
+	}
+	iMap.m.Range(f1)
+}
+
+func (iMap *IntBoolMap) Store(key int, value bool) {
+	iMap.m.Store(key, value)
 }

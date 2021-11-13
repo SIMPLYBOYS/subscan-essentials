@@ -1,13 +1,14 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFunc(t *testing.T) {
 	callerNameRaw := "testing.tRunner"
-	funcNameRaw := "github.com/itering/subscan/util.TestFunc"
+	funcNameRaw := "github.com/CoolBitX-Technology/subscan/util.TestFunc"
 
 	callerName := CallerName()
 	funcName := GetFuncName()

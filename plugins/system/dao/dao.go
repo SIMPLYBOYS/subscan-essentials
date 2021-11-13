@@ -1,14 +1,17 @@
 package dao
 
 import (
-	"github.com/itering/subscan-plugin/storage"
-	"github.com/itering/subscan/plugins/system/model"
-	"github.com/itering/subscan/util"
-	"github.com/itering/substrate-api-rpc/metadata"
 	"strings"
+
+	"github.com/CoolBitX-Technology/subscan/plugins/system/model"
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/itering/subscan-plugin/storage"
+	"github.com/itering/substrate-api-rpc/metadata"
+	"github.com/prometheus/common/log"
 )
 
 func CreateExtrinsicError(db storage.DB, hash string, moduleError *model.MetadataModuleError) error {
+	log.Info("=== CreateExtrinsicError ==")
 	if moduleError == nil {
 		return nil
 	}
@@ -28,6 +31,7 @@ func ExtrinsicError(db storage.DB, hash string) *model.ExtrinsicError {
 }
 
 func CheckExtrinsicError(spec int, raw string, moduleIndex, errorIndex int) *model.MetadataModuleError {
+	// log.Info("=== CheckExtrinsicError ===")
 
 	modules := metadata.Process(&metadata.RuntimeRaw{Raw: raw, Spec: spec})
 

@@ -1,10 +1,11 @@
 package address
 
 import (
-	"github.com/itering/subscan/util"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/CoolBitX-Technology/subscan/util"
+	"github.com/stretchr/testify/assert"
 )
 
 var testCases = []struct {

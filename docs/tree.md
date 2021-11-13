@@ -10,6 +10,9 @@
 ├── cmd
 │   ├── main.go    
 │   ├── run.py              // Observer service startup file
+│   ├── data_sources.go     // create data source connection
+│   ├── injection.go        // inject data source to internal service / handler
+│   ├── observer.go         // Observer service
 ├── configs        
 │   ├── http.toml           // http server port config
 │   ├── mysql.toml          // mysql config file    
@@ -21,9 +24,8 @@
 ├── docs                    // docs dir
 │   └── index.md
 ├── internal                
-│   ├── dao                 // data access object, used for db, redis, cache or http and other resource access
+│   ├── repository          // data access service, used for db, redis resource access
 │   ├── middleware          // http middleware
-│   ├── observer            // observer service
 │   ├── script              // some script
 │   ├── server                  
 │   │   └── http            // init http server router 

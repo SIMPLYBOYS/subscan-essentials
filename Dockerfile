@@ -1,30 +1,36 @@
-FROM golang:1.14.6 as builder
+########################################
+# stage: build
+########################################
+FROM golang:1.15.14-alpine3.14 as builder
 
-WORKDIR /subscan
+WORKDIR /build
 
 COPY go.mod go.sum ./
+
 RUN go mod download
-COPY . /subscan
-WORKDIR /subscan/cmd
+
+COPY . /build
+
+WORKDIR /build/cmd
+
 RUN go build -o subscan
 
-FROM buildpack-deps:buster-scm
+########################################
+# stage: final
+########################################
+FROM python:3.9-alpine
 
-WORKDIR subscan
-COPY configs configs
-COPY configs/redis.toml.example configs/redis.toml
-COPY configs/mysql.toml.example configs/mysql.toml
-COPY configs/http.toml.example configs/http.toml
+COPY --from=builder /build/cmd/subscan /app/subscan
 
-COPY --from=builder /subscan/cmd/subscan cmd/subscan
-COPY cmd/run.py cmd/run.py
-WORKDIR cmd
-RUN mkdir -p /subscan/log
+WORKDIR /app
 
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
-ENTRYPOINT ["/tini", "--"]
+RUN apk add --no-cache tini=0.19.0-r0
 
-CMD ["/subscan/cmd/subscan"]
+COPY configs    /app/configs
+COPY cmd/run.py /app/run.py
+
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["/app/subscan"]
+
 EXPOSE 4399

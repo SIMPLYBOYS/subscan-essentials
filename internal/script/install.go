@@ -3,9 +3,10 @@ package script
 import (
 	"database/sql"
 	"fmt"
-	"github.com/itering/subscan/util"
 	"io"
 	"os"
+
+	"github.com/CoolBitX-Technology/subscan/util"
 )
 
 func Install(conf string) {
@@ -18,7 +19,7 @@ func Install(conf string) {
 	func() {
 		dbHost := util.GetEnv("MYSQL_HOST", "127.0.0.1")
 		dbUser := util.GetEnv("MYSQL_USER", "root")
-		dbPass := util.GetEnv("MYSQL_PASS", "")
+		dbPass := util.GetEnv("MYSQL_PASS", "helloload")
 		dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPass, dbHost, "")
 		db, err := sql.Open("mysql", dsn)
 		if err != nil {
@@ -27,7 +28,8 @@ func Install(conf string) {
 		defer func() {
 			_ = db.Close()
 		}()
-		_, err = db.Exec("CREATE DATABASE IF NOT EXISTS subscan DEFAULT CHARACTER SET = `utf8mb4`")
+		dbCreate := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET = `utf8mb4`", util.GetEnv("DB_NAME", "polkadot_subscan"))
+		_, err = db.Exec(dbCreate)
 		if err != nil {
 			panic(err)
 		}
